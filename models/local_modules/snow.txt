@@ -1,0 +1,86 @@
+
+module("ArcticSnow", version(0, 0, 1),
+	air      : compartment,
+	snow_box : compartment,
+	
+	snow : quantity,
+	water : quantity,
+
+	temp : property,
+	precip : property,
+	ddf : property,
+
+	inf_target : loc,
+	quick_target : loc,
+) {
+    	
+	#TODO Ice & snow sublimation? Just to close WB. Expect about 80 mm/yr or less ET total
+
+	# water_target : loc(glacier.water)
+
+	par_group("Snow") {
+		ddf0_melt : par_real("Degree-day factor for snowmelt", [m m, deg_c-1, day-1], 2.74, 0, 6, "Linear correlation between rate of snow melt and air temperature")
+		#t_snow    : par_real("Temperature at which precip falls as snow", [deg_c], 0, -4, 4)
+		refr_eff  : par_real("Refreeze efficiency", [], 0.5, 0, 1, "Speed of refreeze of liquid water in snow relative to speed of melt at the opposite temperature differential")
+		snow_liq  : par_real("Liquid water fraction", [], 0.1, 0, 0.4, "How many mm liquid water one mm of snow (water equivalents) can hold before the water is released")
+		init_snow : par_real("Initial snow depth (water equivalents)", [m m], 0, 0, 50000)
+		fall_factor : par_real("Snow fall correction factor", [], 1, 0, 2)
+		quick_fracn : par_real("Snow melt quickflow fracn", [], 0, 0, 1)
+	}
+	
+	# These could be made parameters, but it is simpler if they are not. Instead change elevation dependency of temperature.
+	t_snow : constant("Snow temp", [deg_c], 0) # Temperature at which precip falls as snow
+	t_melt : constant("Snow melt temperature", [deg_c], 0)
+	
+	#par_group("Snow aspect", snow_box) {
+	#	aspect_melt_factor : par_real("Aspect melt factor", [], 1, 0.1, 1)
+	#}
+
+	var(snow_box.ddf, [m m, deg_c-1, day-1], "Snow melt degree-day factor") {
+		#TODO Explore whether added complexity is worthwhile: (1) add radiation, (2) ddf varies sinusoidally through the year
+		#aspect_melt_factor * ddf0_melt
+		ddf0_melt
+	}
+	
+	var(snow_box.snow,  [m m], "Snow depth") @initial { init_snow }
+	var(snow_box.water, [m m], "Snow water")
+	
+	# FLUXES
+	
+	precip_as_snow :
+	flux(out, snow_box.snow, [m m, day-1], "Precipitation falling as snow") { fall_factor * air.precip * (air.temp <= t_snow)  }
+	
+	# this could be to water_target if refreeze and liquid water fraction removed
+	precip_as_rain :
+	flux(out, snow_box.water, [m m, day-1], "Precipitation falling as rain")  {  air.precip * (air.temp > t_snow)  }
+	
+	melt :
+	flux(snow_box.snow, snow_box.water, [m m, day-1], "Melt")  {   max(0, ddf*(air.temp - t_melt))   }
+	# To do: investigate whether it's worth calculating and using snow.temp here instead of air.temp
+	
+	# Need this?
+	refreeze :
+	flux(snow_box.water, snow_box.snow, [m m, day-1], "Refreeze")   {   max(0, refr_eff*ddf*(t_melt - air.temp))  }
+		  
+	melt_infiltration :
+	flux(snow_box.water, inf_target, [m m, day-1], "Melt infiltration") {
+		flow := max(0, water - snow*snow_liq)*1[day-1],
+		(1-quick_fracn) * flow 
+	}
+	
+	melt_runoff :
+	flux(snow_box.water, quick_target, [m m, day-1], "Melt runoff") {
+		flow := max(0, water - snow*snow_liq)*1[day-1],
+		quick_fracn * flow
+	}
+  
+	# Set the ordering of water fluxes into/out of the snow compartment. This matters!
+	discrete_order {
+		precip_as_rain
+		precip_as_snow
+		melt
+		refreeze
+		melt_infiltration
+		melt_runoff
+	}
+}

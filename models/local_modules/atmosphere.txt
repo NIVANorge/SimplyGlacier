@@ -1,0 +1,32 @@
+
+module("ArcticAtmosphere", version(0, 0, 1),
+	air : compartment,
+	soil : compartment,
+	temp : property,
+	precip : property,
+	elev_catch : par_real,
+) {
+		
+		par_group("Elevation data", soil) {
+			elev : par_real("Average elevation", [m], 0, 0, 8887)
+		}
+		
+		par_group("Temperature correction") {
+			lapse_rate : par_real("Temp lapse rate", [deg_c, m-1], -0.004, -0.0098, -0.0028, "Rate of change in air temperature as elevation increases")
+		}
+		
+		mtemp : property("Air temperature")
+		var(air.mtemp, [deg_c]) # Input series
+		
+        # Elevation correction of input air temperature
+        # N.B.1 THIS ASSUMES ELEVATION OF INPUT MET DATA = MEAN ELEVATION OF WHOLE CATCH. Can make this more flexible in the future (e.g. to be able to use very different met data series)
+        # N.B.2 Could change air temp with aspect too, but decide to just implement that through changing
+        # the DDF by aspect for now
+		var(air.temp, [deg_c], "Local air temperature") {
+			mtemp + (elev-elev_catch)*lapse_rate
+		}
+		
+        # TO DO: may want to do a precipitation correction for elevation too. See Killingtveit. HBV
+        # does a separate altitudinal precipitation correction for rain and snow
+		var(air.precip, [m m, day-1]) # Input series
+}
