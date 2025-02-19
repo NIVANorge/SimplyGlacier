@@ -1,0 +1,71 @@
+
+module("SimplySed", version(0, 0, 0),
+	soil    : compartment,
+	river   : compartment,
+	glacier : compartment,
+	water   : quantity,
+	sed     : quantity,
+	e_fact  : property,
+	glacial_runoff_soil : property,
+	a_catch : par_real
+) {
+"""
+This is a simple sediment transport module for catchments with Glacier simplified from simplysed.txt.
+
+Erosion is computed as a product of a land erosion factor and a river erosion factor.
+
+The land erosion factor depends on the land slope and presence of glacier.
+
+The erosion factor in the river follows a $$(aQ)^b$$ - type relationship, where Q is the total runoff from the catchment to the river.
+
+Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stachnik
+"""
+
+	load("stdlib/basic_math.txt", library("Response"))
+
+	#par_group("Soil erodibility", soil) {
+	#	soil_ero      : par_real("Soil erosion factor", [k g, deg -1, k m-2, m m-1], 0.01, 0.0001, 0.1, "")
+	#}
+	
+	#par_group("Land slope", soil) {
+	#	land_slope : par_real("Mean slope of land", [deg], 4, 0, 90)
+	#}
+	
+	#par_group("River erosion", river) {
+	#	ksed  : par_real("Erosion scaling factor", [day, m m-1], 15, 0, 100)
+	#	psed  : par_real("Erosion power factor", [], 2, 0.1, 5)
+	#}
+	
+	par_group("Glacier sediments", glacier) {
+		prod : par_real("Production rate of mobilizable sediments", [k g, k m-2, day-1], 0, 0, 100)
+		mob  : par_real("Mobilization rate", [k g, k m-2, day-1], 0, 0, 100)
+		mobpow : par_real("Mobilization rate exponent", [], 2, 1, 5)
+	}
+	
+	# My suggestion (MNO). You could add back in soil/river mobilization, 
+	# but it should not depend on glacier since that is already accounted for
+	
+	var(glacier.sed, [k g, k m-2], "Glacier mobilizable sediments")
+
+	var(glacier.water.sed, [k g, k m-2], [m g, l-1], "Glacier suspended sediments")
+	
+	var(river.water.sed, [k g], [m g, l-1], "Suspended sediments")
+	
+	flux(out, glacier.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
+		prod
+	}
+	
+	flux(glacier.sed, glacier.water.sed, [k g, k m-2, day-1], "Glacier sediment mobilization") {
+		maxrate := mob * (glacier.glacial_runoff_soil=>[])^mobpow,
+		s_response(glacier.sed, 0, 1[k g, k m-2], 0, maxrate)
+	}
+
+
+	#var(soil.e_fact, [k g, k m-2, day-1], "Erosion factor land")          {   land_slope * soil_ero * glacier.glacial_runoff_soil  ->>  }
+	
+	#var(river.e_fact, [], "Erosion factor river")                         {   ((ksed * in_flux(water)/a_catch)->[])^psed  }
+
+	#flux(out, river.water.sed, [k g, day-1], "Sediment mobilization") {   a_catch * aggregate(soil.e_fact) * river.e_fact=>> }
+}
+
+

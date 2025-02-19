@@ -16,12 +16,15 @@ model("SimplyQ-Svalbard") {
 	water : quantity("Water")
 	snow  : quantity("Snow (water equivalents)")
 	ice   : quantity("Ice (water equivalents)")
+	sed : quantity("Sediment")
 	
 	temp   : property("Temperature")
 	precip : property("Precipitation")
 	flow   : property("Flow")
 	pet    : property("Potential evapotranspiration")
 	ddf    : property("Degree-day factor")
+	e_fact : property("Erosion factor")
+	glacial_runoff_soil : property ("glacial input to soil")
     #thaw_depth : property("Soil thaw depth")
     
     downhill   : connection("Downhill throughflow") @directed_graph { soil+ river } @no_cycles
@@ -50,7 +53,18 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/snow.txt", module("ArcticSnow", air, snow_box, snow, water, temp, precip, ddf, loc(glacier.water), loc(river.water)))
 	
-	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, flow, loc(downhill_gl)))
+	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, glacial_runoff_soil, loc(downhill_gl)))
+	
+	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, glacial_runoff_soil, a_catch))
+	
+	module("Extra things", version(0,0,0)){
+		"whatever"
+		
+		Qmm : property("Specific discharge")
+		var(river.water.Qmm, [m m, day -1], "Specific daily discharge") {
+			river.water.flow/a_catch ->>
+		} 
+	}
 	
 	
 	# Unit conversions when going from patches to reaches
@@ -69,7 +83,8 @@ model("SimplyQ-Svalbard") {
     aggregation_weight(snow_box, river) { rel_area }
     
     # Setup solver
-	simply_solver : solver("Simply solver", inca_dascru, [2, hr], 1e-3)
-	solve(simply_solver, soil.water, deepgw.water, river.water, glacier.water)
+	sol : solver("Simply solver", inca_dascru, [2, hr], 1e-3)
+	solve(sol, soil.water, deepgw.water, river.water, glacier.water)
+	solve(sol, glacier.sed)
     # (Note snow stuff isn't on the solver, that's done discretely)
 }
