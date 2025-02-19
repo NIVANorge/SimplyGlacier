@@ -1,0 +1,48 @@
+
+module("SimplySed", version(0, 0, 0),
+	soil    : compartment,
+	river   : compartment,
+	glacier : compartment,
+	water   : quantity,
+	sed     : quantity,
+	e_fact  : property,
+	a_catch : par_real
+) {
+"""
+This is a simple sediment transport module for catchments with Glacier simplified from simplysed.txt.
+
+Erosion is computed as a product of a land erosion factor and a river erosion factor.
+
+The land erosion factor depends on the land slope and presence of glacier.
+
+The erosion factor in the river follows a $$(aQ)^b$$ - type relationship, where Q is the total runoff from the catchment to the river.
+
+Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stachnik
+"""
+
+	load("stdlib/basic_math.txt", library("Response"))
+
+	par_group("Soil erodibility", soil) {
+		soil_ero      : par_real("Soil erosion factor", [k g, k m-2, m m-1, day-1], 0.01, 0.0001, 0.1, "")
+	}
+	
+	par_group("Land slope", soil) {
+		land_slope : par_real("Mean slope of land", [deg], 4, 0, 90)
+	}
+	
+	par_group("River erosion", river) {
+		ksed  : par_real("Erosion scaling factor", [day, m m-1], 15, 0, 100)
+		psed  : par_real("Erosion power factor", [], 2, 0.1, 5)
+	}
+	
+	var(river.water.sed, [k g], [m g, l-1], "Suspended sediments")
+
+
+	var(soil.e_fact, [k g, k m-2, day-1], "Erosion factor land")          {   land_slope * soil_ero * glacier.glacial_runoff_soil  ->>  }
+	
+	var(river.e_fact, [], "Erosion factor river")                         {   ((ksed * in_flux(water)/a_catch)->[])^psed  }
+
+	flux(out, river.water.sed, [k g, day-1], "Sediment mobilization") {   a_catch * aggregate(soil.e_fact) * river.e_fact }
+}
+
+
