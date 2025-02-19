@@ -13,10 +13,14 @@ module("ArcticAtmosphere", version(0, 0, 1),
 		
 		par_group("Temperature correction") {
 			lapse_rate : par_real("Temp lapse rate", [deg_c, m-1], -0.004, -0.0098, -0.0028, "Rate of change in air temperature as elevation increases")
+			precip_lapse_rate : par_real("Precip lapse rate", [m-1], 0.0019, 0.0, 0.005, "Rate of change in precipitation as elevation increases")
 		}
 		
 		mtemp : property("Air temperature")
 		var(air.mtemp, [deg_c]) # Input series
+		
+		mprecip : property("Precipitation")
+		var(air.mprecip, [m m, day -1]) # Input series
 		
         # Elevation correction of input air temperature
         # N.B.1 THIS ASSUMES ELEVATION OF INPUT MET DATA = MEAN ELEVATION OF WHOLE CATCH. Can make this more flexible in the future (e.g. to be able to use very different met data series)
@@ -28,5 +32,7 @@ module("ArcticAtmosphere", version(0, 0, 1),
 		
         # TO DO: may want to do a precipitation correction for elevation too. See Killingtveit. HBV
         # does a separate altitudinal precipitation correction for rain and snow
-		var(air.precip, [m m, day-1]) # Input series
+		var(air.precip, [m m, day -1], "Local air precipitation") {
+			mprecip *(1+ precip_lapse_rate * (elev-elev_catch))
+		}
 }

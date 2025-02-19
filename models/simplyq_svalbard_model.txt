@@ -50,7 +50,16 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/snow.txt", module("ArcticSnow", air, snow_box, snow, water, temp, precip, ddf, loc(glacier.water), loc(river.water)))
 	
-	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, flow, loc(downhill_gl)))
+	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, loc(downhill_gl)))
+	
+	module("Extra things", version(0,0,0)){
+		"whatever"
+		
+		Qmm : property("Specific discharge")
+		var(river.water.Qmm, [m m, day -1], "Specific daily discharge") {
+			river.water.flow * 86400 [s, day -1]/ a_catch ->>
+		} 
+	}
 	
 	
 	# Unit conversions when going from patches to reaches
