@@ -10,6 +10,7 @@ module("SimplyGlacier", version(0, 0, 0),
 	temp : property,
 	precip : property,
 	flow : property,
+	glacial_runoff_soil : property,
 	runoff_target : loc,
 ) {
 """
@@ -80,4 +81,11 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 		perc_frac*flow     if ice > ice_epsilon,
 		flow               otherwise
 	}
+	
+
+	var (glacier.glacial_runoff_soil, [m m, day-1]) {
+		perc_frac*glacier.water.flow     if ice > ice_epsilon,
+		glacier.water.flow               otherwise
+	}
+	
 }
