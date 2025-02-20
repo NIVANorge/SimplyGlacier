@@ -10,6 +10,7 @@ module("SimplyGlacier", version(0, 0, 0),
 	temp : property,
 	precip : property,
 	flow : property,
+	is_glacier : property,
 	glacial_runoff_soil : property,
 	runoff_target : loc,
 ) {
@@ -42,8 +43,11 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 	var(glacier.water, [m m], "Glacier melt water")
 	
 	var(glacier.water.flow, [m m, day-1], "Glacier melt water flow") {
-		water*tc_glacier
+		water*tc_glacier   if is_glacier,
+		in_flux(water)     otherwise
 	}
+	
+	var(glacier.is_glacier, []) { glacier.ice > ice_epsilon }
 	
 	# Seibert et al. (2018) have a more complex version of this, varying with snow
 	# depth. However, don't have glacier melt unless snow is gone, so simplify for now
@@ -56,7 +60,7 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 	# When glacier ice is not present in this compartment (i.e. when the initial glacier ice thickness for this patch = 0), then this compartment is entirely passive. Fluxes from the snow compartment just pass straight through to the soil water compartment and no glacier accumulation occurs. When glacier ice is present, accumulation and melt occur, and melt water either goes directly to the river reach or percolates to the soil water compartment.
 
 	flux(snow_box.snow, glacier.ice, [m m, day-1], "Glacier accumulation") {
-		snowtoice * snow   if last(glacier.ice) > ice_epsilon,
+		snowtoice * snow   if last(glacier.is_glacier),
 		0                  otherwise
 	}
 	
@@ -74,18 +78,18 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 	
 	# Flux of water going either downhill to lower glaciers or to the river
 	flux(glacier.water, runoff_target, [m m, day-1], "Glacial runoff") {
-		(1-perc_frac)*flow     if ice > ice_epsilon,
+		(1-perc_frac)*flow     if is_glacier,
 		0                      otherwise
 	}
 			
 	flux(glacier.water, soil.water, [m m, day-1], "Glacial input to soil water") {
-		perc_frac*flow     if ice > ice_epsilon,
+		perc_frac*flow     if is_glacier,
 		flow               otherwise
 	}
 	
 
 	var (glacier.glacial_runoff_soil, [m m, day-1]) {
-		perc_frac*glacier.water.flow     if ice > ice_epsilon,
+		perc_frac*glacier.water.flow     if is_glacier,
 		glacier.water.flow               otherwise
 	}
 	
