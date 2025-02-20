@@ -25,6 +25,7 @@ model("SimplyQ-Svalbard") {
 	ddf    : property("Degree-day factor")
 	e_fact : property("Erosion factor")
 	glacial_runoff_soil : property ("glacial input to soil")
+	is_glacier : property("Is glacier")
     #thaw_depth : property("Soil thaw depth")
     
     downhill   : connection("Downhill throughflow") @directed_graph { soil+ river } @no_cycles
@@ -53,9 +54,9 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/snow.txt", module("ArcticSnow", air, snow_box, snow, water, temp, precip, ddf, loc(glacier.water), loc(river.water)))
 	
-	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, glacial_runoff_soil, loc(downhill_gl)))
+	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, is_glacier, glacial_runoff_soil, loc(downhill_gl)))
 	
-	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, glacial_runoff_soil, a_catch))
+	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, is_glacier, glacial_runoff_soil, a_catch))
 	
 	module("Extra things", version(0,0,0)){
 		"whatever"

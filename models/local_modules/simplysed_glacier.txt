@@ -6,6 +6,7 @@ module("SimplySed", version(0, 0, 0),
 	water   : quantity,
 	sed     : quantity,
 	e_fact  : property,
+	is_glacier : property,
 	glacial_runoff_soil : property,
 	a_catch : par_real
 ) {
@@ -36,7 +37,7 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 	#	psed  : par_real("Erosion power factor", [], 2, 0.1, 5)
 	#}
 	
-	par_group("Glacier sediments", glacier) {
+	par_group("Glacier sediments") {
 		prod : par_real("Production rate of mobilizable sediments", [k g, k m-2, day-1], 0, 0, 100)
 		mob  : par_real("Mobilization rate", [k g, k m-2, day-1], 0, 0, 100)
 		mobpow : par_real("Mobilization rate exponent", [], 2, 1, 5)
@@ -52,7 +53,7 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 	var(river.water.sed, [k g], [m g, l-1], "Suspended sediments")
 	
 	flux(out, glacier.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
-		prod
+		prod * is_glacier
 	}
 	
 	flux(glacier.sed, glacier.water.sed, [k g, k m-2, day-1], "Glacier sediment mobilization") {

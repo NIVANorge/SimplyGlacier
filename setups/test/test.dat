@@ -219,6 +219,9 @@ Very basic test setup that you can modify
 			
 			par_real("Temp lapse rate") 
 			[ -0.004 ]
+			
+			par_real("Precip lapse rate") 
+			[ 0.0019 ]
 		
 		}
 	
@@ -236,6 +239,12 @@ Very basic test setup that you can modify
 			
 			par_real("Glacier accumulation coefficient") 
 			[ 0 ]
+			
+			par_real("Rain ablation coefficient") 
+			[ 80 ]
+			
+			par_real("Glacier time constant") 
+			[ 1 ]
 		
 		}
 		
@@ -244,6 +253,23 @@ Very basic test setup that you can modify
 			par_real("Initial ice thickness") [
 				0 100000 100000 0 
 			]
+		
+		}
+	
+	}
+	
+	module("SimplySed", version(0, 0, 0)) {
+		
+		par_group("Glacier sediments") {
+			
+			par_real("Production rate of mobilizable sediments") 
+			[ 1 ]
+			
+			par_real("Mobilization rate") 
+			[ 1 ]
+			
+			par_real("Mobilization rate exponent") 
+			[ 2 ]
 		
 		}
 	
