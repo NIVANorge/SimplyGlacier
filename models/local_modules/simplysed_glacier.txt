@@ -40,6 +40,8 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 		prod : par_real("Production rate of mobilizable sediments", [k g, k m-2, day-1], 0, 0, 100)
 		mob  : par_real("Mobilization rate", [k g, k m-2, day-1], 0, 0, 100)
 		mobpow : par_real("Mobilization rate exponent", [], 2, 1, 5)
+#this a sediment pool under glacier
+		sed_max : par_real ("Maximal mobilizable sediment", [k g, k m-2], 10, 0, 1000)
 	}
 	
 	# My suggestion (MNO). You could add back in soil/river mobilization, 
@@ -49,23 +51,27 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 
 	var(glacier.water.sed, [k g, k m-2], [m g, l-1], "Glacier suspended sediments")
 	
-	var(river.water.sed, [k g], [m g, l-1], "Suspended sediments")
+	var(river.water.sed, [k g], [m g, l-1], "Suspended sediments in river")
 	
+# sediment generation from bedrock to subglacial sediment pool
+
 	flux(out, glacier.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
 		prod
 	}
 	
 	flux(glacier.sed, glacier.water.sed, [k g, k m-2, day-1], "Glacier sediment mobilization") {
 		maxrate := mob * (glacier.glacial_runoff_soil=>[])^mobpow,
-		s_response(glacier.sed, 0, 1[k g, k m-2], 0, maxrate)
+# see basic math in stdlib for explanation
+		s_response(glacier.sed, 0, sed_max, 0, maxrate)
 	}
 
+#	flux(river.water.sed, glacier.water.sed, [k g, day-1], "Sediment mobilization to river") {   a_catch * aggregate(soil.e_fact) * river.e_fact=>> }
 
 	#var(soil.e_fact, [k g, k m-2, day-1], "Erosion factor land")          {   land_slope * soil_ero * glacier.glacial_runoff_soil  ->>  }
 	
 	#var(river.e_fact, [], "Erosion factor river")                         {   ((ksed * in_flux(water)/a_catch)->[])^psed  }
 
-	#flux(out, river.water.sed, [k g, day-1], "Sediment mobilization") {   a_catch * aggregate(soil.e_fact) * river.e_fact=>> }
+	
 }
 
 

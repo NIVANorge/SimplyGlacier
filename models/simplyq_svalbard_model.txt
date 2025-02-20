@@ -17,6 +17,7 @@ model("SimplyQ-Svalbard") {
 	snow  : quantity("Snow (water equivalents)")
 	ice   : quantity("Ice (water equivalents)")
 	sed : quantity("Sediment")
+	tracer : quantity("Tracer")
 	
 	temp   : property("Temperature")
 	precip : property("Precipitation")
@@ -56,6 +57,8 @@ model("SimplyQ-Svalbard") {
 	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, glacial_runoff_soil, loc(downhill_gl)))
 	
 	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, glacial_runoff_soil, a_catch))
+	
+	load("local_modules/simplytracer_glacier.txt", module("SimplyTracer", soil, river, glacier, water, tracer, glacial_runoff_soil, a_catch))
 	
 	module("Extra things", version(0,0,0)){
 		"whatever"
