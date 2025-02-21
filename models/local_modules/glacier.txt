@@ -7,9 +7,11 @@ module("SimplyGlacier", version(0, 0, 0),
 	ice : quantity,
 	snow : quantity,
 	water : quantity,
+	chop : quantity,
 	temp : property,
 	precip : property,
 	flow : property,
+	side_flow : property,
 	is_glacier : property,
 	runoff_target : loc,
 ) {
@@ -22,11 +24,14 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 	
 	# Parameters
 	par_group("Glacier global") {
-		perc_frac : par_real("Glacier percolation fraction", [], 0.1, 0, 1, "Proportion of glacier water flow that percolates down to the underlying ground vs going directly to the reach")
 		ddf_ice   : par_real("Degree-day factor for ice melt", [m m, deg_c-1, day-1], 3, 1, 15)
 		snowtoice : par_real("Glacier accumulation coefficient", [day-1], 0, 0, 1e-3, "Proportion of overlying snow which becomes glacier ice (for roughly appropriate glacier mass balance)")
-		rain_ablation : par_real("Rain ablation coefficient", [deg_c], 80, 75, 95, "Coefficient of glacier ablation inducted by rain (for roughly appropriate glacier ablation during rain events)")
+		f_rain_ablation : par_real("Rain ablation coefficient", [deg_c], 80, 75, 95, "Coefficient of glacier ablation inducted by rain (for roughly appropriate glacier ablation during rain events)")
 		tc_glacier : par_real("Glacier time constant", [day-1], 1, 0.1, 10)
+		
+		perc_frac : par_real("Glacier percolation fraction", [], 0.1, 0, 1, "Proportion of glacier water flow that percolates down to the underlying ground vs going directly to the reach")
+		chop_fac : par_real("Factor to regulate channel opening / closing", [deg_c-1, day-1], 0, 0, 10)
+		use_chop : par_bool("Use the channel opening / closing mechanic", false)
 	}
 	
 	par_group("Glacier", glacier) {
@@ -65,25 +70,43 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling
 	
 	flux(glacier.ice, glacier.water, [m m, day-1], "Glacier melt") {
 		# Smoothly turn-off glacial melt as a function of snow depth (melt goes from max_melt to 0 as snow depth goes from 0 to 5 cm. Quick literature review suggested 5 cm was about appropriate)
-		max_melt := max(0, ddf_ice*(air.temp - t_melt) + air.precip * max(0,air.temp)/rain_ablation),
+		max_melt := max(0, ddf_ice*(air.temp - t_melt)) + rain_ablation,
 		s_response(snow_box.snow, 0[m m], 50[m m], max_melt, 0[m m])
 	}
 	
-	testablation : property ("Test rain ablation")
-	var (glacier.testablation, [m m, day-1]) {
-		air.precip * max(0,air.temp)/rain_ablation
+	rain_ablation : property ("Rain ablation")
+	var (glacier.ice.rain_ablation, [m m, day-1]) {
+		air.precip * max(0,air.temp)/f_rain_ablation
+	}
+	
+	var(glacier.chop, [], "Glacier channel openness") @initial {
+		1              if use_chop,
+		(air.temp > 0) otherwise
+	}
+	
+	flux(out, glacier.chop, [day-1], "Channel opening / closing") {
+		dampener := {
+			s_response(chop, 0, 0.01, 0, 1) if air.temp < 0,
+			s_response(chop, 0.99, 1, 1, 0) otherwise
+		},
+		use_chop*chop_fac*air.temp*dampener
 	}
 	
 	perc_fr : property("Dynamic percolation fraction")
 	var(glacier.perc_fr, []) {
 		# It's not actually dynamic yet
-		perc_frac
+		perc_frac * chop
 	}
+	
+	
+	var(glacier.water.side_flow, [m m, day-1]) {
+		(1-perc_fr)*flow     if is_glacier,
+		0                      otherwise
+	} @no_store
 	
 	# Flux of water going either downhill to lower glaciers or to the river
 	flux(glacier.water, runoff_target, [m m, day-1], "Glacial runoff") {
-		(1-perc_fr)*flow     if is_glacier,
-		0                      otherwise
+		side_flow
 	}
 			
 	flux(glacier.water, soil.water, [m m, day-1], "Glacial input to soil water") {

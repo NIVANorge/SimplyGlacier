@@ -17,6 +17,8 @@ model("SimplyQ-Svalbard") {
 	snow  : quantity("Snow (water equivalents)")
 	ice   : quantity("Ice (water equivalents)")
 	
+	chop  : quantity("Channel openness")
+	
 	temp   : property("Temperature")
 	precip : property("Precipitation")
 	flow   : property("Flow")
@@ -25,7 +27,8 @@ model("SimplyQ-Svalbard") {
 	e_fact : property("Erosion factor")
 	glacial_runoff_soil : property ("glacial input to soil")
 	is_glacier : property("Is glacier")
-    #thaw_depth : property("Soil thaw depth")
+    
+	side_flow : property("Runoff flow")
     
     downhill   : connection("Downhill throughflow") @directed_graph { soil+ river } @no_cycles
 	downhill_gl : connection("Downhill glacier") @directed_graph { glacier+ river } @no_cycles
@@ -53,7 +56,7 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/snow.txt", module("ArcticSnow", air, snow_box, snow, water, temp, precip, ddf, loc(glacier.water), loc(river.water)))
 	
-	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, is_glacier, loc(downhill_gl)))
+	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, chop, temp, precip, flow, side_flow, is_glacier, loc(downhill_gl)))
 	
 	module("Extra things", version(0,0,0)) {
 		"whatever"
@@ -84,6 +87,6 @@ model("SimplyQ-Svalbard") {
     # Setup solver
 	sol : solver("Simply solver", inca_dascru, [2, hr], 1e-3)
 	solve(sol, soil.water, deepgw.water, river.water, glacier.water)
-# 	solve(sol, glacier.sed)
+ 	solve(sol, glacier.chop)
     # (Note snow stuff isn't on the solver, that's done discretely)
 }

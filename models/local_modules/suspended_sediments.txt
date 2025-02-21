@@ -7,7 +7,7 @@ module("SimplySed", version(0, 0, 1),
 	sed     : quantity,
 	e_fact  : property,
 	is_glacier : property,
-	flow : property,
+	side_flow : property,
 	a_catch : par_real
 ) {
 """
@@ -37,7 +37,7 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 	
 	# Sediment generation from bedrock to subglacial sediment pool
 	flux(out, glacier.water.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
-		mob * is_glacier * (glacier.water.flow=>[])^mobpow
+		mob * is_glacier * (glacier.water.side_flow=>[])^mobpow
 	}
 	
 }

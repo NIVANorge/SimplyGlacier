@@ -1,4 +1,4 @@
-# Saved from model : "simplyq_svalbard_model.txt"
+# Saved from model : "simplyq_sed_ions_svalbard_model.txt"
 
 data_set {
 	
@@ -245,6 +245,12 @@ Very basic test setup that you can modify
 			
 			par_real("Glacier time constant") 
 			[ 1 ]
+			
+			par_real("Factor to regulate channel opening / closing") 
+			[ 0.005 ]
+			
+			par_bool("Use the channel opening / closing mechanic") 
+			[ true ]
 		
 		}
 		
@@ -258,18 +264,46 @@ Very basic test setup that you can modify
 	
 	}
 	
-	module("SimplySed", version(0, 0, 0)) {
+	module("SimplySed", version(0, 0, 1)) {
 		
 		par_group("Glacier sediments") {
-			
-			par_real("Production rate of mobilizable sediments") 
-			[ 1 ]
 			
 			par_real("Mobilization rate") 
 			[ 1 ]
 			
 			par_real("Mobilization rate exponent") 
 			[ 2 ]
+			
+			par_real("Maximal mobilizable sediment") 
+			[ 10 ]
+		
+		}
+	
+	}
+	
+	module("Tracer Cl", version(0, 0, 0)) {
+		
+		par_group("Glacier tracer") {
+			
+			par_real("Weathering") 
+			[ 0 ]
+			
+			par_real("Groundwater weathering") 
+			[ 0 ]
+		
+		}
+	
+	}
+	
+	module("Tracer SO4", version(0, 0, 0)) {
+		
+		par_group("Glacier tracer") {
+			
+			par_real("Weathering") 
+			[ 0 ]
+			
+			par_real("Groundwater weathering") 
+			[ 0 ]
 		
 		}
 	
