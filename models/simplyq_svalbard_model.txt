@@ -53,7 +53,7 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/snow.txt", module("ArcticSnow", air, snow_box, snow, water, temp, precip, ddf, loc(glacier.water), loc(river.water)))
 	
-	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, is_glacier, glacial_runoff_soil, loc(downhill_gl)))
+	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, is_glacier, loc(downhill_gl)))
 	
 	module("Extra things", version(0,0,0)) {
 		"whatever"
