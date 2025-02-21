@@ -1,0 +1,17 @@
+
+model("SimplyQ-Sed-Ions-Svalbard") {
+
+	extend("simplyq_svalbard_model.txt")
+	
+	sed    : quantity("Sediment")
+	
+	cl     : quantity("Cl")
+	so4    : quantity("SO4")
+	
+	load("local_modules/suspended_sediments.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, is_glacier, glacial_runoff_soil, a_catch))
+	
+	load("local_modules/tracer.txt", 
+		module("SimplyTracer", "Tracer Cl", soil, river, glacier, deepgw, water, cl),
+		module("SimplyTracer", "Tracer SO4", soil, river, glacier, deepgw, water, so4),
+	)
+}

@@ -16,7 +16,6 @@ model("SimplyQ-Svalbard") {
 	water : quantity("Water")
 	snow  : quantity("Snow (water equivalents)")
 	ice   : quantity("Ice (water equivalents)")
-	sed : quantity("Sediment")
 	
 	temp   : property("Temperature")
 	precip : property("Precipitation")
@@ -56,13 +55,12 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/glacier.txt", module("SimplyGlacier", air, glacier, snow_box, soil, ice, snow, water, temp, precip, flow, is_glacier, glacial_runoff_soil, loc(downhill_gl)))
 	
-	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, is_glacier, glacial_runoff_soil, a_catch))
-	
 	module("Extra things", version(0,0,0)) {
 		"whatever"
 		
 		Qmm : property("Specific discharge")
-		var(river.water.Qmm, [m m, day -1], "Specific daily discharge") {
+		
+		var(river.water.Qmm, [m m, day-1], "Specific daily discharge") {
 			river.water.flow/a_catch ->>
 		} 
 	}
@@ -86,6 +84,6 @@ model("SimplyQ-Svalbard") {
     # Setup solver
 	sol : solver("Simply solver", inca_dascru, [2, hr], 1e-3)
 	solve(sol, soil.water, deepgw.water, river.water, glacier.water)
-	solve(sol, glacier.sed)
+# 	solve(sol, glacier.sed)
     # (Note snow stuff isn't on the solver, that's done discretely)
 }

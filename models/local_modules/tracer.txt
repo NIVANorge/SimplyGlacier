@@ -1,0 +1,40 @@
+
+module("SimplyTracer", version(0, 0, 0),
+	soil    : compartment,
+	river   : compartment,
+	glacier : compartment,
+	gw		: compartment,
+	water   : quantity,
+	tracer  : quantity,
+) {
+"""
+This is a simple tracer transport module for catchments with Glacier simplified from simplysed.txt.
+
+Authors: Magnus D. Norling, Francois Clayer, Lukasz Stachnik
+"""
+
+	load("stdlib/basic_math.txt", library("Response"))
+
+	par_group("Glacier tracer") {
+		prod   : par_real("Weathering", [m g, l-1, day-1], 0, 0, 10)
+		prodgw : par_real("Groundwater weathering", [m g, l-1, day-1], 0, 0, 10)
+	}
+	
+	var(glacier.water.tracer, [k g, k m-2], [m g, l-1], "Glacier tracer concentration")
+	
+	var(river.water.tracer, [k g], [m g, l-1], "Tracer concentration in river")
+	
+	var(soil.water.tracer, [k g, k m-2], [m g, l-1], "Tracer concentration in soil")
+	
+	var(gw.water.tracer, [k g, k m-2], [m g, l-1], "Tracer concentration in groundwater")
+	
+	flux(out, soil.water.tracer, [k g, k m-2, day-1], "Transport of tracer to soil") {
+		prod * water ->>
+	}
+	
+	flux(out, gw.water.tracer, [k g, k m-2, day-1], "Weathering of tracer to groundwater") {
+		prodgw * water ->>
+	}
+}
+
+
