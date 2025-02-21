@@ -58,7 +58,7 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, is_glacier, glacial_runoff_soil, a_catch))
 	
-	module("Extra things", version(0,0,0)){
+	module("Extra things", version(0,0,0)) {
 		"whatever"
 		
 		Qmm : property("Specific discharge")
