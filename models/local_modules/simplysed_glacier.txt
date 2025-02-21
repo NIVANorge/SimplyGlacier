@@ -48,7 +48,7 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 	# My suggestion (MNO). You could add back in soil/river mobilization, 
 	# but it should not depend on glacier since that is already accounted for
 	
-	var(glacier.sed, [k g, k m-2], "Glacier mobilizable sediments")
+#	var(glacier.sed, [k g, k m-2], "Glacier mobilizable sediments")
 
 	var(glacier.water.sed, [k g, k m-2], [m g, l-1], "Glacier suspended sediments")
 	
@@ -56,14 +56,18 @@ Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stach
 	
 # sediment generation from bedrock to subglacial sediment pool
 
-	flux(out, glacier.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
-		prod * is_glacier
-	}
+#	flux(out, glacier.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
+#		prod * is_glacier
+#	}
 	
-	flux(glacier.sed, glacier.water.sed, [k g, k m-2, day-1], "Glacier sediment mobilization") {
-		maxrate := mob * (glacier.glacial_runoff_soil=>[])^mobpow,
+#	flux(glacier.sed, glacier.water.sed, [k g, k m-2, day-1], "Glacier sediment mobilization") {
+#		maxrate := mob * (glacier.glacial_runoff_soil=>[])^mobpow,
 # see basic math in stdlib for explanation
-		s_response(glacier.sed, 0, sed_max, 0, maxrate)
+#		s_response(glacier.sed, 0, sed_max, 0, maxrate)
+#	}
+	
+	flux(out, glacier.water.sed, [k g, k m-2, day-1], "Mobilizable sediment production") {
+		mob * is_glacier * (glacier.glacial_runoff_soil=>[])^mobpow
 	}
 
 #	flux(river.water.sed, glacier.water.sed, [k g, day-1], "Sediment mobilization to river") {   a_catch * aggregate(soil.e_fact) * river.e_fact=>> }

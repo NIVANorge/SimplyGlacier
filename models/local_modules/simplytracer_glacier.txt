@@ -1,0 +1,66 @@
+
+module("SimplyTracer", version(0, 0, 0),
+	soil    : compartment,
+	river   : compartment,
+	glacier : compartment,
+	gw		: compartment,
+	water   : quantity,
+	tracer  : quantity,
+#	weathering_ions : quantity,
+	glacial_runoff_soil : property,
+	a_catch : par_real
+) {
+"""
+This is a simple tracer transport module for catchments with Glacier simplified from simplysed.txt.
+
+
+
+Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stachnik
+"""
+
+	load("stdlib/basic_math.txt", library("Response"))
+
+
+	par_group("Glacier tracer") {
+		prod : par_real("Weathering", [m g, l-1, day-1], 0, 0, 10)
+		prodgw : par_real("Groundwater weathering", [m g, l-1, day-1], 0, 0, 10)
+	}
+	
+	#discharge is negatively correlated with dissolved solids concentration, so I addded negative exponent
+
+	
+	# My suggestion (MNO). You could add back in soil/river mobilization, 
+	# but it should not depend on glacier since that is already accounted for
+	
+	var(glacier.water.tracer, [k g, k m-2], [m g, l-1], "Glacier tracer concentration")
+	
+	var(river.water.tracer, [k g], [m g, l-1], "Tracer concentration in river")
+	
+	var(soil.water.tracer, [k g, k m-2], [m g, l-1], "Tracer concentration in soil")
+	
+	var(gw.water.tracer, [k g, k m-2], [m g, l-1], "Tracer concentration in groundwater")
+	
+	flux(out, soil.water.tracer, [k g, k m-2, day-1], "Transport of tracer to soil") {
+		prod * water ->>
+	}
+	
+	flux(out, gw.water.tracer, [k g, k m-2, day-1], "Weathering of tracer to groundwater") {
+		prodgw * water ->>
+	}
+	
+#	flux(glacier.tracer, glacier.water.tracer, [k g, k m-2, day-1], "Glacier tracer mobilization") {
+#		maxrate := mob * (glacier.glacial_runoff_soil=>[])^mobpow,
+#		s_response(glacier.tracer, 0, 1[k g, k m-2], 0, maxrate)
+#	}
+
+#how to address exhaustion of tracer during season?
+
+
+	#var(soil.e_fact, [k g, k m-2, day-1], "Erosion factor land")          {   land_slope * soil_ero * glacier.glacial_runoff_soil  ->>  }
+	
+	#var(river.e_fact, [], "Erosion factor river")                         {   ((ksed * in_flux(water)/a_catch)->[])^psed  }
+
+	#flux(out, river.water.sed, [k g, day-1], "Sediment mobilization") {   a_catch * aggregate(soil.e_fact) * river.e_fact=>> }
+}
+
+

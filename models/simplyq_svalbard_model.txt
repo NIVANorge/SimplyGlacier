@@ -59,7 +59,7 @@ model("SimplyQ-Svalbard") {
 	
 	load("local_modules/simplysed_glacier.txt", module("SimplySed", soil, river, glacier, water, sed, e_fact, is_glacier, glacial_runoff_soil, a_catch))
 	
-	load("local_modules/simplytracer_glacier.txt", module("SimplyTracer", soil, river, glacier, water, tracer, glacial_runoff_soil, a_catch))
+	load("local_modules/simplytracer_glacier.txt", module("SimplyTracer", soil, river, glacier, deepgw, water, tracer, glacial_runoff_soil, a_catch))
 	
 	module("Extra things", version(0,0,0)){
 		"whatever"
@@ -89,6 +89,6 @@ model("SimplyQ-Svalbard") {
     # Setup solver
 	sol : solver("Simply solver", inca_dascru, [2, hr], 1e-3)
 	solve(sol, soil.water, deepgw.water, river.water, glacier.water)
-	solve(sol, glacier.sed)
+# 	solve(sol, glacier.sed)
     # (Note snow stuff isn't on the solver, that's done discretely)
 }
