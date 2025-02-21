@@ -13,12 +13,6 @@ module("SimplySed", version(0, 0, 1),
 """
 This is a simple sediment transport module for catchments with Glacier simplified from simplysed.txt.
 
-Erosion is computed as a product of a land erosion factor and a river erosion factor.
-
-The land erosion factor depends on the land slope and presence of glacier.
-
-The erosion factor in the river follows a $$(aQ)^b$$ - type relationship, where Q is the total runoff from the catchment to the river.
-
 Authors: Leah A. Jackson-Blake, Magnus D. Norling, Francois Clayer, Lukasz Stachnik
 """
 

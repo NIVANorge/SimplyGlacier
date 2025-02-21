@@ -8,7 +8,7 @@ module("SimplyTracer", version(0, 0, 0),
 	tracer  : quantity,
 ) {
 """
-This is a simple tracer transport module for catchments with Glacier simplified from simplysed.txt.
+This is a simple tracer transport module for catchments with Glacier.
 
 Authors: Magnus D. Norling, Francois Clayer, Lukasz Stachnik
 """
